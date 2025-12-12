@@ -1,8 +1,8 @@
 import numpy as np
 import cv2
 import matplotlib.pyplot as plt
-from google.colab import files
-import io
+import os
+from pathlib import Path
 
 def calculate_dice_score(ground_truth, prediction):
     """
@@ -68,63 +68,63 @@ def visualize_difference(gt, pred):
 # --- MAIN PROGRAM ---
 
 print("=== PROGRAM MENGHITUNG DICE COEFFICIENT ===")
-print("Langkah 1: Upload Citra Ground Truth (Kunci Jawaban Manual)")
-uploaded_gt = files.upload()
+print("Langkah 1: Masukkan path Citra Ground Truth (Kunci Jawaban Manual)")
+path_gt = input("Path Ground Truth: ").strip()
 
-print("\nLangkah 2: Upload Citra Hasil Segmentasi (Prediksi Algoritma)")
-uploaded_pred = files.upload()
+print("\nLangkah 2: Masukkan path Citra Hasil Segmentasi (Prediksi Algoritma)")
+path_pred = input("Path Prediksi: ").strip()
 
 # Proses file yang diupload
-if uploaded_gt and uploaded_pred:
-    # Ambil nama file
-    name_gt = list(uploaded_gt.keys())[0]
-    name_pred = list(uploaded_pred.keys())[0]
-
+if os.path.exists(path_gt) and os.path.exists(path_pred):
     # Baca gambar sebagai Grayscale
-    img_gt = cv2.imdecode(np.frombuffer(uploaded_gt[name_gt], np.uint8), cv2.IMREAD_GRAYSCALE)
-    img_pred = cv2.imdecode(np.frombuffer(uploaded_pred[name_pred], np.uint8), cv2.IMREAD_GRAYSCALE)
+    img_gt = cv2.imread(path_gt, cv2.IMREAD_GRAYSCALE)
+    img_pred = cv2.imread(path_pred, cv2.IMREAD_GRAYSCALE)
+    
+    if img_gt is None or img_pred is None:
+        print("Error: Gagal membaca file gambar. Periksa path file.")
+    else:
 
     # Validasi Ukuran
     # Jika ukuran beda, samakan ukuran prediksi ke ground truth
-    if img_gt.shape != img_pred.shape:
-        print(f"\n[INFO] Ukuran berbeda. Resize prediksi {img_pred.shape} ke {img_gt.shape}...")
-        img_pred = cv2.resize(img_pred, (img_gt.shape[1], img_gt.shape[0]))
+        if img_gt.shape != img_pred.shape:
+            print(f"\n[INFO] Ukuran berbeda. Resize prediksi {img_pred.shape} ke {img_gt.shape}...")
+            img_pred = cv2.resize(img_pred, (img_gt.shape[1], img_gt.shape[0]))
 
-    # Hitung Skor
-    score = calculate_dice_score(img_gt, img_pred)
+        # Hitung Skor
+        score = calculate_dice_score(img_gt, img_pred)
 
-    # Buat Visualisasi Error
-    vis_diff = visualize_difference(img_gt, img_pred)
+        # Buat Visualisasi Error
+        vis_diff = visualize_difference(img_gt, img_pred)
 
-    # Tampilkan Hasil
-    plt.figure(figsize=(15, 5))
+        # Tampilkan Hasil
+        plt.figure(figsize=(15, 5))
 
-    plt.subplot(1, 3, 1)
-    plt.title("Ground Truth (Manual)")
-    plt.imshow(img_gt, cmap='gray')
-    plt.axis('off')
+        plt.subplot(1, 3, 1)
+        plt.title("Ground Truth (Manual)")
+        plt.imshow(img_gt, cmap='gray')
+        plt.axis('off')
 
-    plt.subplot(1, 3, 2)
-    plt.title("Prediksi (Algoritma)")
-    plt.imshow(img_pred, cmap='gray')
-    plt.axis('off')
+        plt.subplot(1, 3, 2)
+        plt.title("Prediksi (Algoritma)")
+        plt.imshow(img_pred, cmap='gray')
+        plt.axis('off')
 
-    plt.subplot(1, 3, 3)
-    plt.title(f"Visualisasi Error\nDice Score: {score:.4f}")
-    plt.imshow(vis_diff)
-    plt.xlabel("Hijau: Benar | Merah: Noise | Biru: Terlewat")
-    # Hilangkan ticks tapi biarkan label
-    plt.xticks([]), plt.yticks([])
+        plt.subplot(1, 3, 3)
+        plt.title(f"Visualisasi Error\nDice Score: {score:.4f}")
+        plt.imshow(vis_diff)
+        plt.xlabel("Hijau: Benar | Merah: Noise | Biru: Terlewat")
+        # Hilangkan ticks tapi biarkan label
+        plt.xticks([]), plt.yticks([])
 
-    plt.tight_layout()
-    plt.show()
+        plt.tight_layout()
+        plt.show()
 
-    print(f"\n--- HASIL AKHIR ---")
-    print(f"Dice Coefficient: {score:.5f}")
-    if score > 0.7:
-        print("Kualitas Segmentasi: BAIK")
-    else:
-        print("Kualitas Segmentasi: BURUK (Perlu perbaikan threshold/metode)")
+        print(f"\n--- HASIL AKHIR ---")
+        print(f"Dice Coefficient: {score:.5f}")
+        if score > 0.7:
+            print("Kualitas Segmentasi: BAIK")
+        else:
+            print("Kualitas Segmentasi: BURUK (Perlu perbaikan threshold/metode)")
 
 else:
-    print("Error: Harap upload kedua file gambar.")
+    print("Error: File tidak ditemukan. Periksa path file.")
