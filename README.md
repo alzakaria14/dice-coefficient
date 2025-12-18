@@ -38,4 +38,4 @@ Instalasi (lokal):
 pip install numpy opencv-python matplotlib
 ```
 
-MIT Licence
+MIT License
